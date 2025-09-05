@@ -1,9 +1,6 @@
 package com.cafeteria.gestao_cafeteria.service;
 
-import com.cafeteria.gestao_cafeteria.dto.RegistrarPagamentoDTO;
-import com.cafeteria.gestao_cafeteria.dto.ComandaResponseDTO;
-import com.cafeteria.gestao_cafeteria.dto.ItemComandaResponseDTO;
-import com.cafeteria.gestao_cafeteria.dto.PagamentoResponseDTO;
+import com.cafeteria.gestao_cafeteria.dto.*;
 import com.cafeteria.gestao_cafeteria.infra.exceptions.ResourceNotFoundException;
 import com.cafeteria.gestao_cafeteria.model.*;
 import com.cafeteria.gestao_cafeteria.repository.ComandaRepository;
@@ -175,5 +172,27 @@ public class ComandaService {
         responseDTO.setItemIdsPagos(pagamentoDTO.getItemIds());
 
         return responseDTO;
+    }
+
+    // Dentro da classe ComandaService
+    @Transactional(readOnly = true)
+    public List<ComandaResumoDTO> listarComandasPorStatus(StatusComanda status) {
+        List<Comanda> comandas = comandaRepository.findByStatus(status);
+
+        return comandas.stream().map(comanda -> {
+            ComandaResumoDTO dto = new ComandaResumoDTO();
+            dto.setId(comanda.getId());
+            dto.setNumeroMesa(comanda.getNumeroMesa());
+            dto.setIdentificadorCliente(comanda.getIdentificadorCliente());
+            dto.setDataAbertura(comanda.getDataAbertura());
+
+            // Calcula o valor total para o resumo
+            BigDecimal total = comanda.getItens().stream()
+                    .map(item -> item.getPrecoUnitarioMomento().multiply(new BigDecimal(item.getQuantidade())))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            dto.setValorTotal(total);
+
+            return dto;
+        }).collect(Collectors.toList());
     }
 }
