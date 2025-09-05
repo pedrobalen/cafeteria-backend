@@ -8,12 +8,11 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "movimentos_estoque")
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = "estoque")
 @EqualsAndHashCode(exclude = "estoque")
+@Data
 public class MovimentoEstoque {
 
     @Id

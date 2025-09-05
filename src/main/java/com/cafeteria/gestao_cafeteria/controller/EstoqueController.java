@@ -1,10 +1,13 @@
 package com.cafeteria.gestao_cafeteria.controller;
 
 import com.cafeteria.gestao_cafeteria.dto.EstoqueMovimentoDTO;
+import com.cafeteria.gestao_cafeteria.dto.EstoqueResponseDTO;
 import com.cafeteria.gestao_cafeteria.service.EstoqueService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/estoque")
@@ -27,4 +30,9 @@ public class EstoqueController {
         return ResponseEntity.ok().build();
     }
 
+    // Dentro da classe EstoqueController
+    @GetMapping
+    public ResponseEntity<List<EstoqueResponseDTO>> listarEstoque() {
+        return ResponseEntity.ok(estoqueService.listarEstoque());
+    }
 }

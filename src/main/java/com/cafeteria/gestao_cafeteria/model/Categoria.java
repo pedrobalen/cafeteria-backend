@@ -5,12 +5,11 @@ import lombok.*;
 
 @Entity
 @Table(name = "categorias_produto")
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode
+@Data
 public class Categoria {
 
     @Id

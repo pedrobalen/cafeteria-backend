@@ -4,19 +4,15 @@ import com.cafeteria.gestao_cafeteria.dto.RegistrarPagamentoDTO;
 import com.cafeteria.gestao_cafeteria.dto.ComandaResponseDTO;
 import com.cafeteria.gestao_cafeteria.dto.ItemComandaResponseDTO;
 import com.cafeteria.gestao_cafeteria.dto.PagamentoResponseDTO;
-import com.cafeteria.gestao_cafeteria.model.StatusComanda;
 import com.cafeteria.gestao_cafeteria.infra.exceptions.ResourceNotFoundException;
-import com.cafeteria.gestao_cafeteria.model.Comanda;
-import com.cafeteria.gestao_cafeteria.model.ItemComanda;
-import com.cafeteria.gestao_cafeteria.model.Pagamento;
-import com.cafeteria.gestao_cafeteria.model.Produto;
+import com.cafeteria.gestao_cafeteria.model.*;
 import com.cafeteria.gestao_cafeteria.repository.ComandaRepository;
 import com.cafeteria.gestao_cafeteria.repository.ItemComandaRepository;
 import com.cafeteria.gestao_cafeteria.repository.PagamentoRepository;
 import com.cafeteria.gestao_cafeteria.repository.ProdutoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // Usando a anotação do Spring
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -34,6 +30,10 @@ public class ComandaService {
     private ItemComandaRepository itemComandaRepository;
     @Autowired
     private PagamentoRepository pagamentoRepository;
+
+    // Injeção do EstoqueService para a integração
+    @Autowired
+    private EstoqueService estoqueService;
 
     @Transactional
     public Comanda abrirComanda(Integer numeroMesa, String identificadorCliente) {
@@ -154,6 +154,10 @@ public class ComandaService {
         for (ItemComanda item : itensParaPagar) {
             item.setPagamento(pagamentoSalvo);
         }
+
+        // INTEGRAÇÃO COM ESTOQUE AQUI
+        // Após confirmar o pagamento, chamamos o serviço de estoque para dar baixa nos itens.
+        estoqueService.registrarSaidaPorVenda(itensParaPagar);
 
         boolean todosItensPagos = comanda.getItens().stream().allMatch(item -> item.getPagamento() != null);
         if (todosItensPagos) {

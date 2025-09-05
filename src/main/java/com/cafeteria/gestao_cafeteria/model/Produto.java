@@ -6,12 +6,12 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "produtos")
-@Getter
-@Setter
+
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = "categoria")
 @EqualsAndHashCode(exclude = "categoria")
+@Data
 public class Produto {
 
     @Id

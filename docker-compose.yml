@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # --- SERVIÇO DO BANCO DE DADOS (PostgreSQL) - Sem alterações ---
+  db:
+    image: postgres:15
+    container_name: cafeteria-postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: cafeteria_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: always
+
+  # --- NOVO SERVIÇO: pgAdmin ---
+  pgadmin:
+    # Imagem oficial do pgAdmin
+    image: dpage/pgadmin4
+
+    container_name: cafeteria-pgadmin
+
+    # Variáveis de ambiente para o login inicial no pgAdmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@cafeteria.com # Email/usuário para logar na interface web
+      PGADMIN_DEFAULT_PASSWORD: admin # Senha para logar na interface web. MUDE EM PRODUÇÃO!
+
+    # Mapeamento de portas: <sua_maquina>:<container>
+    # Acessaremos o pgAdmin pelo navegador no endereço http://localhost:5050
+    ports:
+      - "5050:80"
+
+    # Volume para salvar as configurações do pgAdmin (ex: servidores salvos)
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+
+    # 'depends_on' garante que o container do banco de dados (db)
+    # seja iniciado ANTES do container do pgAdmin.
+    depends_on:
+      - db
+
+    restart: always
+
+# Declaração dos volumes que estamos usando
+volumes:
+  postgres-data:
+  pgadmin-data: # Novo volume para os dados do pgAdmin

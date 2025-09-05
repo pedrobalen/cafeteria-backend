@@ -7,12 +7,11 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "estoque")
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = "produto")
 @EqualsAndHashCode(exclude = "produto")
+@Data
 public class Estoque {
 
     @Id

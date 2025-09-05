@@ -8,8 +8,6 @@ import java.util.List;
 
 @Entity
 @Table(name = "comandas")
-@Getter
-@Setter
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
