@@ -2,7 +2,7 @@ package com.cafeteria.gestao_cafeteria.controller;
 
 import com.cafeteria.gestao_cafeteria.dto.*;
 import com.cafeteria.gestao_cafeteria.model.Comanda;
-import com.cafeteria.gestao_cafeteria.model.ItemComanda; // Importar ItemComanda
+import com.cafeteria.gestao_cafeteria.model.ItemComanda;
 import com.cafeteria.gestao_cafeteria.model.StatusComanda;
 import com.cafeteria.gestao_cafeteria.service.ComandaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,19 +21,16 @@ public class ComandaController {
 
     @PostMapping("/abrir")
     public ResponseEntity<Comanda> abrirComanda(@RequestBody AbrirComandaDTO abrirComandaDTO) {
-        Comanda novaComanda = comandaService.abrirComanda(
-            abrirComandaDTO.getNumeroMesa(),
-            abrirComandaDTO.getIdentificadorCliente()
-        );
+        Comanda novaComanda = comandaService.abrirComanda(abrirComandaDTO);
         return new ResponseEntity<>(novaComanda, HttpStatus.CREATED);
     }
 
     @PostMapping("/{comandaId}/itens")
     public ResponseEntity<ItemComanda> adicionarItem(@PathVariable Long comandaId, @RequestBody AddItemDTO addItemDTO) {
         ItemComanda novoItem = comandaService.adicionarItem(
-            comandaId,
-            addItemDTO.getProdutoId(),
-            addItemDTO.getQuantidade()
+                comandaId,
+                addItemDTO.getProdutoId(),
+                addItemDTO.getQuantidade()
         );
         return new ResponseEntity<>(novoItem, HttpStatus.CREATED);
     }
@@ -50,13 +47,11 @@ public class ComandaController {
         return ResponseEntity.ok(response);
     }
 
-    // Dentro da classe ComandaController
     @GetMapping
     public ResponseEntity<List<ComandaResumoDTO>> listarComandas(@RequestParam(required = false) StatusComanda status) {
         if (status != null) {
             return ResponseEntity.ok(comandaService.listarComandasPorStatus(status));
         }
-        // Futuramente podemos adicionar um findAll aqui
-        return ResponseEntity.ok(List.of()); // Retorna lista vazia se nenhum status for passado
+        return ResponseEntity.ok(List.of());
     }
 }

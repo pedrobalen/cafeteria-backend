@@ -8,17 +8,21 @@ import java.util.List;
 
 @Entity
 @Table(name = "comandas")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = {"mesa", "itens"})
+@EqualsAndHashCode(exclude = {"mesa", "itens"})
 public class Comanda {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "numero_mesa")
-    private Integer numeroMesa;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mesa_id")
+    private Mesa mesa;
 
     @Column(name = "identificador_cliente", length = 100)
     private String identificadorCliente;

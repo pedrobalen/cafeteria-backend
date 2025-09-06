@@ -1,17 +1,18 @@
 package com.cafeteria.gestao_cafeteria.model;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "itens_comanda")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = {"comanda", "produto", "pagamento"})
+@EqualsAndHashCode(exclude = {"comanda", "produto", "pagamento"})
 public class ItemComanda {
 
     @Id

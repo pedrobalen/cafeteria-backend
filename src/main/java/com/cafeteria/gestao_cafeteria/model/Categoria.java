@@ -9,7 +9,8 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode
-@Data
+@Getter
+@Setter
 public class Categoria {
 
     @Id

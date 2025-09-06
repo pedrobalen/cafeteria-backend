@@ -11,7 +11,8 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @ToString(exclude = "categoria")
 @EqualsAndHashCode(exclude = "categoria")
-@Data
+@Getter
+@Setter
 public class Produto {
 
     @Id

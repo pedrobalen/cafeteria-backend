@@ -9,6 +9,6 @@ import lombok.Setter;
 @Setter
 @Data
 public class AbrirComandaDTO {
-    private Integer numeroMesa;
+    private Long mesaId;
     private String identificadorCliente;
 }

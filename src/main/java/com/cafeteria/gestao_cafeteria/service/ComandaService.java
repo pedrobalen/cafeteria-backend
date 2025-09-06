@@ -3,10 +3,7 @@ package com.cafeteria.gestao_cafeteria.service;
 import com.cafeteria.gestao_cafeteria.dto.*;
 import com.cafeteria.gestao_cafeteria.infra.exceptions.ResourceNotFoundException;
 import com.cafeteria.gestao_cafeteria.model.*;
-import com.cafeteria.gestao_cafeteria.repository.ComandaRepository;
-import com.cafeteria.gestao_cafeteria.repository.ItemComandaRepository;
-import com.cafeteria.gestao_cafeteria.repository.PagamentoRepository;
-import com.cafeteria.gestao_cafeteria.repository.ProdutoRepository;
+import com.cafeteria.gestao_cafeteria.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,20 +24,30 @@ public class ComandaService {
     private ItemComandaRepository itemComandaRepository;
     @Autowired
     private PagamentoRepository pagamentoRepository;
-
-    // Injeção do EstoqueService para a integração
     @Autowired
-    private EstoqueService estoqueService;
+    private MesaRepository mesaRepository;
+
+    // Injeção do novo InsumoService para a baixa de estoque baseada em receita
+    @Autowired
+    private InsumoService insumoService;
 
     @Transactional
-    public Comanda abrirComanda(Integer numeroMesa, String identificadorCliente) {
-        if (numeroMesa == null && (identificadorCliente == null || identificadorCliente.isBlank())) {
-            throw new IllegalArgumentException("É necessário fornecer um número de mesa ou um identificador de cliente para abrir a comanda.");
+    public Comanda abrirComanda(AbrirComandaDTO dto) {
+        if (dto.getMesaId() == null && (dto.getIdentificadorCliente() == null || dto.getIdentificadorCliente().isBlank())) {
+            throw new IllegalArgumentException("É necessário fornecer um ID de mesa ou um identificador de cliente para abrir a comanda.");
         }
 
         Comanda novaComanda = new Comanda();
-        novaComanda.setNumeroMesa(numeroMesa);
-        novaComanda.setIdentificadorCliente(identificadorCliente);
+
+        if (dto.getMesaId() != null) {
+            Mesa mesa = mesaRepository.findById(dto.getMesaId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Mesa não encontrada com o ID: " + dto.getMesaId()));
+
+            novaComanda.setMesa(mesa);
+        } else {
+            novaComanda.setIdentificadorCliente(dto.getIdentificadorCliente());
+        }
+
         novaComanda.setStatus(StatusComanda.ABERTA);
         novaComanda.setDataAbertura(LocalDateTime.now());
 
@@ -101,7 +108,9 @@ public class ComandaService {
 
         ComandaResponseDTO comandaDTO = new ComandaResponseDTO();
         comandaDTO.setId(comanda.getId());
-        comandaDTO.setNumeroMesa(comanda.getNumeroMesa());
+        if (comanda.getMesa() != null) {
+            comandaDTO.setNumeroMesa(comanda.getMesa().getNumero());
+        }
         comandaDTO.setIdentificadorCliente(comanda.getIdentificadorCliente());
         comandaDTO.setStatus(comanda.getStatus());
         comandaDTO.setDataAbertura(comanda.getDataAbertura());
@@ -152,9 +161,8 @@ public class ComandaService {
             item.setPagamento(pagamentoSalvo);
         }
 
-        // INTEGRAÇÃO COM ESTOQUE AQUI
-        // Após confirmar o pagamento, chamamos o serviço de estoque para dar baixa nos itens.
-        estoqueService.registrarSaidaPorVenda(itensParaPagar);
+        // Ponto da Integração: Chamando o InsumoService para dar baixa no estoque
+        insumoService.registrarSaidaPorVenda(itensParaPagar);
 
         boolean todosItensPagos = comanda.getItens().stream().allMatch(item -> item.getPagamento() != null);
         if (todosItensPagos) {
@@ -174,7 +182,6 @@ public class ComandaService {
         return responseDTO;
     }
 
-    // Dentro da classe ComandaService
     @Transactional(readOnly = true)
     public List<ComandaResumoDTO> listarComandasPorStatus(StatusComanda status) {
         List<Comanda> comandas = comandaRepository.findByStatus(status);
@@ -182,11 +189,12 @@ public class ComandaService {
         return comandas.stream().map(comanda -> {
             ComandaResumoDTO dto = new ComandaResumoDTO();
             dto.setId(comanda.getId());
-            dto.setNumeroMesa(comanda.getNumeroMesa());
+            if (comanda.getMesa() != null) {
+                dto.setNumeroMesa(comanda.getMesa().getNumero());
+            }
             dto.setIdentificadorCliente(comanda.getIdentificadorCliente());
             dto.setDataAbertura(comanda.getDataAbertura());
 
-            // Calcula o valor total para o resumo
             BigDecimal total = comanda.getItens().stream()
                     .map(item -> item.getPrecoUnitarioMomento().multiply(new BigDecimal(item.getQuantidade())))
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
