@@ -28,7 +28,34 @@ public class MesaController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Mesa>> listarMesas(@RequestParam(defaultValue = "true") boolean ativo) {
-        return ResponseEntity.ok(mesaRepository.findByAtivo(ativo));
+    public ResponseEntity<List<Mesa>> listarMesas(@RequestParam(required = false) Boolean ativo) {
+        if (ativo != null) {
+            return ResponseEntity.ok(mesaRepository.findByAtivo(ativo));
+        }
+        return ResponseEntity.ok(mesaRepository.findAll());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Mesa> atualizarMesa(@PathVariable Long id, @RequestBody MesaCreateDTO mesaDTO) {
+        Mesa mesaAtualizada = mesaService.atualizarMesa(id, mesaDTO);
+        return ResponseEntity.ok(mesaAtualizada);
+    }
+
+    @PatchMapping("/{id}/ativar")
+    public ResponseEntity<Mesa> ativarMesa(@PathVariable Long id) {
+        Mesa mesa = mesaService.alterarStatusAtivo(id, true);
+        return ResponseEntity.ok(mesa);
+    }
+
+    @PatchMapping("/{id}/desativar")
+    public ResponseEntity<Mesa> desativarMesa(@PathVariable Long id) {
+        Mesa mesa = mesaService.alterarStatusAtivo(id, false);
+        return ResponseEntity.ok(mesa);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletarMesa(@PathVariable Long id) {
+        mesaService.deletarMesa(id);
+        return ResponseEntity.noContent().build();
     }
 }
