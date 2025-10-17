@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,12 +28,12 @@ public class ComandaService {
     @Autowired
     private MesaRepository mesaRepository;
 
-    // Injeção do novo InsumoService para a baixa de estoque baseada em receita
     @Autowired
     private InsumoService insumoService;
 
     @Transactional
-    public Comanda abrirComanda(AbrirComandaDTO dto) {
+    // MUDANÇA: O método agora retorna um DTO para evitar expor a entidade.
+    public ComandaResponseDTO abrirComanda(AbrirComandaDTO dto) {
         if (dto.getMesaId() == null && (dto.getIdentificadorCliente() == null || dto.getIdentificadorCliente().isBlank())) {
             throw new IllegalArgumentException("É necessário fornecer um ID de mesa ou um identificador de cliente para abrir a comanda.");
         }
@@ -51,11 +52,26 @@ public class ComandaService {
         novaComanda.setStatus(StatusComanda.ABERTA);
         novaComanda.setDataAbertura(LocalDateTime.now());
 
-        return comandaRepository.save(novaComanda);
+        Comanda comandaSalva = comandaRepository.save(novaComanda);
+
+        // Mapeia a entidade salva para um DTO antes de retornar.
+        ComandaResponseDTO responseDTO = new ComandaResponseDTO();
+        responseDTO.setId(comandaSalva.getId());
+        responseDTO.setStatus(comandaSalva.getStatus());
+        responseDTO.setDataAbertura(comandaSalva.getDataAbertura());
+        if (comandaSalva.getMesa() != null) {
+            responseDTO.setNumeroMesa(comandaSalva.getMesa().getNumero());
+        }
+        responseDTO.setIdentificadorCliente(comandaSalva.getIdentificadorCliente());
+        responseDTO.setItens(new ArrayList<>());
+        responseDTO.setValorTotal(BigDecimal.ZERO);
+
+        return responseDTO;
     }
 
     @Transactional
-    public ItemComanda adicionarItem(Long comandaId, Long produtoId, int quantidade) {
+    // MUDANÇA: O método agora retorna um DTO para desacoplar a resposta da entidade.
+    public ItemComandaResponseDTO adicionarItem(Long comandaId, Long produtoId, int quantidade) {
         if (quantidade <= 0) {
             throw new IllegalArgumentException("A quantidade deve ser maior que zero.");
         }
@@ -81,12 +97,24 @@ public class ComandaService {
         novoItem.setPrecoUnitarioMomento(produto.getPrecoVenda());
         novoItem.setDataAdicao(LocalDateTime.now());
 
-        return itemComandaRepository.save(novoItem);
+        ItemComanda itemSalvo = itemComandaRepository.save(novoItem);
+
+        // Mapeia a entidade salva para um DTO antes de retornar.
+        ItemComandaResponseDTO responseDTO = new ItemComandaResponseDTO();
+        responseDTO.setId(itemSalvo.getId());
+        responseDTO.setNomeProduto(itemSalvo.getProduto().getNome());
+        responseDTO.setQuantidade(itemSalvo.getQuantidade());
+        responseDTO.setPrecoUnitario(itemSalvo.getPrecoUnitarioMomento());
+        BigDecimal subtotal = itemSalvo.getPrecoUnitarioMomento().multiply(new BigDecimal(itemSalvo.getQuantidade()));
+        responseDTO.setSubtotal(subtotal);
+
+        return responseDTO;
     }
 
+    // Este método já está correto.
     @Transactional(readOnly = true)
     public ComandaResponseDTO buscarPorId(Long comandaId) {
-        Comanda comanda = comandaRepository.findById(comandaId)
+        Comanda comanda = comandaRepository.findByIdWithDetails(comandaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Comanda não encontrada com o ID: " + comandaId));
 
         List<ItemComandaResponseDTO> itensDTO = comanda.getItens().stream().map(item -> {
@@ -120,6 +148,7 @@ public class ComandaService {
         return comandaDTO;
     }
 
+    // Este método já está correto.
     @Transactional
     public PagamentoResponseDTO registrarPagamento(Long comandaId, RegistrarPagamentoDTO pagamentoDTO) {
         if (pagamentoDTO.getItemIds() == null || pagamentoDTO.getItemIds().isEmpty()) {
@@ -161,7 +190,6 @@ public class ComandaService {
             item.setPagamento(pagamentoSalvo);
         }
 
-        // Ponto da Integração: Chamando o InsumoService para dar baixa no estoque
         insumoService.registrarSaidaPorVenda(itensParaPagar);
 
         boolean todosItensPagos = comanda.getItens().stream().allMatch(item -> item.getPagamento() != null);
@@ -182,9 +210,10 @@ public class ComandaService {
         return responseDTO;
     }
 
+    // Este método já está correto.
     @Transactional(readOnly = true)
     public List<ComandaResumoDTO> listarComandasPorStatus(StatusComanda status) {
-        List<Comanda> comandas = comandaRepository.findByStatus(status);
+        List<Comanda> comandas = comandaRepository.findByStatusWithDetails(status);
 
         return comandas.stream().map(comanda -> {
             ComandaResumoDTO dto = new ComandaResumoDTO();

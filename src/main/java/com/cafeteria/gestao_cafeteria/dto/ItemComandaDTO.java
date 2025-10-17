@@ -1,13 +1,13 @@
 package com.cafeteria.gestao_cafeteria.dto;
 
 import lombok.Data;
-import java.math.BigDecimal;
 
 @Data
-public class ItemComandaResponseDTO {
+public class ItemComandaDTO {
     private Long id;
     private String nomeProduto;
     private int quantidade;
-    private BigDecimal precoUnitario;
-    private BigDecimal subtotal;
+    private Long comandaId; // Only include the ID, not the whole object
+
+    // Constructors, Getters, Setters
 }

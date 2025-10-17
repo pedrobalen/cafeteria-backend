@@ -1,8 +1,9 @@
 package com.cafeteria.gestao_cafeteria.controller;
 
 import com.cafeteria.gestao_cafeteria.dto.MesaCreateDTO;
-import com.cafeteria.gestao_cafeteria.model.Mesa;
-import com.cafeteria.gestao_cafeteria.repository.MesaRepository;
+import com.cafeteria.gestao_cafeteria.dto.MesaDTO;
+// MUDANÇA: A entidade Mesa não é mais importada, pois nunca será retornada.
+// import com.cafeteria.gestao_cafeteria.model.Mesa;
 import com.cafeteria.gestao_cafeteria.service.MesaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,44 +17,57 @@ import java.util.List;
 public class MesaController {
 
     @Autowired
-    private MesaRepository mesaRepository;
-
-    @Autowired
     private MesaService mesaService;
 
     @PostMapping
-    public ResponseEntity<Mesa> criarMesa(@RequestBody MesaCreateDTO mesaDTO) {
-        Mesa novaMesa = mesaService.criarMesa(mesaDTO);
-        return new ResponseEntity<>(novaMesa, HttpStatus.CREATED);
+    // A assinatura já estava correta, mas o corpo foi otimizado.
+    public ResponseEntity<MesaDTO> criarMesa(@RequestBody MesaCreateDTO mesaDTO) {
+        // Assumindo que o service.criarMesa agora retorna o DTO diretamente.
+        MesaDTO novaMesaDto = mesaService.criarMesa(mesaDTO);
+        return new ResponseEntity<>(novaMesaDto, HttpStatus.CREATED);
     }
 
     @GetMapping
-    public ResponseEntity<List<Mesa>> listarMesas(@RequestParam(required = false) Boolean ativo) {
-        if (ativo != null) {
-            return ResponseEntity.ok(mesaRepository.findByAtivo(ativo));
-        }
-        return ResponseEntity.ok(mesaRepository.findAll());
+    // MUDANÇA: A assinatura agora retorna uma lista de DTOs.
+    public ResponseEntity<List<MesaDTO>> listarMesas(@RequestParam(required = false) Boolean ativo) {
+        // MUDANÇA: A lógica foi movida para o MesaService.
+        List<MesaDTO> mesas = mesaService.listarMesas(ativo);
+        return ResponseEntity.ok(mesas);
+    }
+
+    @GetMapping("/{id}")
+    // Endpoint para buscar uma única mesa por ID, que estava faltando.
+    public ResponseEntity<MesaDTO> buscarMesaPorId(@PathVariable Long id) {
+        MesaDTO mesa = mesaService.buscarPorId(id);
+        return ResponseEntity.ok(mesa);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Mesa> atualizarMesa(@PathVariable Long id, @RequestBody MesaCreateDTO mesaDTO) {
-        Mesa mesaAtualizada = mesaService.atualizarMesa(id, mesaDTO);
+    // MUDANÇA: A assinatura agora retorna um DTO.
+    public ResponseEntity<MesaDTO> atualizarMesa(@PathVariable Long id, @RequestBody MesaCreateDTO mesaDTO) {
+        // O service.atualizarMesa deve ser ajustado para retornar o DTO.
+        MesaDTO mesaAtualizada = mesaService.atualizarMesa(id, mesaDTO);
         return ResponseEntity.ok(mesaAtualizada);
     }
 
     @PatchMapping("/{id}/ativar")
-    public ResponseEntity<Mesa> ativarMesa(@PathVariable Long id) {
-        Mesa mesa = mesaService.alterarStatusAtivo(id, true);
+    // MUDANÇA: A assinatura agora retorna um DTO.
+    public ResponseEntity<MesaDTO> ativarMesa(@PathVariable Long id) {
+        // O service.alterarStatusAtivo deve retornar o DTO.
+        MesaDTO mesa = mesaService.alterarStatusAtivo(id, true);
         return ResponseEntity.ok(mesa);
     }
 
     @PatchMapping("/{id}/desativar")
-    public ResponseEntity<Mesa> desativarMesa(@PathVariable Long id) {
-        Mesa mesa = mesaService.alterarStatusAtivo(id, false);
+    // MUDANÇA: A assinatura agora retorna um DTO.
+    public ResponseEntity<MesaDTO> desativarMesa(@PathVariable Long id) {
+        // O service.alterarStatusAtivo deve retornar o DTO.
+        MesaDTO mesa = mesaService.alterarStatusAtivo(id, false);
         return ResponseEntity.ok(mesa);
     }
 
     @DeleteMapping("/{id}")
+    // Este método já estava correto.
     public ResponseEntity<Void> deletarMesa(@PathVariable Long id) {
         mesaService.deletarMesa(id);
         return ResponseEntity.noContent().build();

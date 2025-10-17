@@ -1,8 +1,6 @@
 package com.cafeteria.gestao_cafeteria.controller;
 
 import com.cafeteria.gestao_cafeteria.dto.*;
-import com.cafeteria.gestao_cafeteria.model.Comanda;
-import com.cafeteria.gestao_cafeteria.model.ItemComanda;
 import com.cafeteria.gestao_cafeteria.model.StatusComanda;
 import com.cafeteria.gestao_cafeteria.service.ComandaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,19 +18,19 @@ public class ComandaController {
     private ComandaService comandaService;
 
     @PostMapping("/abrir")
-    public ResponseEntity<Comanda> abrirComanda(@RequestBody AbrirComandaDTO abrirComandaDTO) {
-        Comanda novaComanda = comandaService.abrirComanda(abrirComandaDTO);
-        return new ResponseEntity<>(novaComanda, HttpStatus.CREATED);
+    public ResponseEntity<ComandaResponseDTO> abrirComanda(@RequestBody AbrirComandaDTO abrirComandaDTO) {
+        ComandaResponseDTO responseDto = comandaService.abrirComanda(abrirComandaDTO);
+        return new ResponseEntity<>(responseDto, HttpStatus.CREATED);
     }
 
     @PostMapping("/{comandaId}/itens")
-    public ResponseEntity<ItemComanda> adicionarItem(@PathVariable Long comandaId, @RequestBody AddItemDTO addItemDTO) {
-        ItemComanda novoItem = comandaService.adicionarItem(
+    public ResponseEntity<ItemComandaResponseDTO> adicionarItem(@PathVariable Long comandaId, @RequestBody AddItemDTO addItemDTO) {
+        ItemComandaResponseDTO novoItemDto = comandaService.adicionarItem(
                 comandaId,
                 addItemDTO.getProdutoId(),
                 addItemDTO.getQuantidade()
         );
-        return new ResponseEntity<>(novoItem, HttpStatus.CREATED);
+        return new ResponseEntity<>(novoItemDto, HttpStatus.CREATED);
     }
 
     @GetMapping("/{comandaId}")
@@ -52,6 +50,7 @@ public class ComandaController {
         if (status != null) {
             return ResponseEntity.ok(comandaService.listarComandasPorStatus(status));
         }
+        // Retornar uma lista vazia é uma boa prática quando nenhum filtro é aplicado e não há um default.
         return ResponseEntity.ok(List.of());
     }
 }
